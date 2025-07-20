@@ -28,9 +28,9 @@ jobs:
           rm -rf dist
           mkdir -p dist/css
           cp index.html dist/
-          cp -r css/* dist/css/
-          cp -r img/* dist/img/
-          cp -r js/* dist/js/
+          [ -d css ] && cp -r css/* dist/css/
+          [ -d img ] && cp -r img/* dist/img/
+          [ -d js ] && cp -r js/* dist/js/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
