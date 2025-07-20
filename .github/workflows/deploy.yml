@@ -26,7 +26,7 @@ jobs:
       - name: Prepare dist
         run: |
           rm -rf dist
-          mkdir -p dist/css
+          mkdir -p dist/css dist/img dist/js
           cp index.html dist/
           [ -d css ] && cp -r css/* dist/css/
           [ -d img ] && cp -r img/* dist/img/
