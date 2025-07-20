@@ -1,4 +1,5 @@
-name: Deploy static site
+name: Deploy static site to S3 & CloudFront
+
 on:
   push:
     branches: [main]
@@ -6,34 +7,54 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     permissions:
       id-token: write
       contents: read
 
+    # よく使う値は環境変数へ
     env:
       BUCKET: ${{ secrets.S3_BUCKET }}
       DIST_ID: ${{ secrets.CF_DIST_ID }}
       REGION: ap-northeast-1
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Prepare dist
+        run: |
+          rm -rf dist
+          mkdir -p dist/css
+          cp index.html dist/
+          cp -r css/* dist/css/
+          cp -r img/* dist/img/
+          cp -r js/* dist/js/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.ROLE_ARN }}
+          role-to-assume: ${{ env.ROLE_ARN }}
           aws-region: ${{ env.REGION }}
 
-      - id: diff
+      - name: Detect changed files
+        id: diff
         run: |
-          aws s3 sync site/ s3://$BUCKET --delete --dryrun \
+          aws s3 sync dist/ s3://$BUCKET --delete --dryrun \
             | grep -E '^(upload:|delete:)' \
             | awk '{print "/"$4}' > list.txt || true
           echo "paths=$(tr '\n' ' ' < list.txt)" >> "$GITHUB_OUTPUT"
-          echo "count=$(wc -l < list.txt)" >> "$GITHUB_OUTPUT"
+          echo "count=$(wc -l < list.txt)"        >> "$GITHUB_OUTPUT"
+          echo "Changed paths:"
+          cat list.txt || true
 
-      - run: aws s3 sync site/ s3://$BUCKET --delete
+      - name: Sync to S3
+        run: |
+          aws s3 sync dist/ s3://$BUCKET --delete
 
-      - if: steps.diff.outputs.count != '0'
+      - name: Invalidate CloudFront (changed paths)
+        if: steps.diff.outputs.count != '0'
         run: |
           aws cloudfront create-invalidation \
             --distribution-id $DIST_ID \

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hello New World V3</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./css/style.css" />
   </head>
   <body>
     <header class="header">
@@ -22,13 +22,32 @@
             <a href="#contact" class="nav-link">Contact</a>
           </li>
         </ul>
-        <div class="hamburger">
+        <div id="js-drawer-icon" class="hamburger">
           <span class="bar"></span>
           <span class="bar"></span>
           <span class="bar"></span>
         </div>
       </nav>
     </header>
+
+    <div id="js-drawer-content" class="drawer-content">
+      <nav>
+        <ul class="drawer-content__menu">
+          <li>
+            <a href="#home" class="nav-link">Home</a>
+          </li>
+          <li>
+            <a href="#about" class="nav-link">About</a>
+          </li>
+          <li>
+            <a href="#services" class="nav-link">Services</a>
+          </li>
+          <li>
+            <a href="#contact" class="nav-link">Contact</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
 
     <section class="hero" id="home">
       <div class="hero-content">
@@ -120,5 +139,7 @@
         </div>
       </div>
     </footer>
+
+    <script src="./js/script.js"></script>
   </body>
 </html>
