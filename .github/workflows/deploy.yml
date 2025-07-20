@@ -16,7 +16,7 @@ jobs:
     env:
       BUCKET: ${{ secrets.S3_BUCKET }}
       DIST_ID: ${{ secrets.CF_DIST_ID }}
-      REGION: ap-northeast-1
+      REGION: ${{ secrets.REGION }}
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
 
     steps:
@@ -38,24 +38,12 @@ jobs:
           role-to-assume: ${{ env.ROLE_ARN }}
           aws-region: ${{ env.REGION }}
 
-      - name: Detect changed files
-        id: diff
-        run: |
-          aws s3 sync dist/ s3://$BUCKET --delete --dryrun \
-            | grep -E '^(upload:|delete:)' \
-            | awk '{print "/"$4}' > list.txt || true
-          echo "paths=$(tr '\n' ' ' < list.txt)" >> "$GITHUB_OUTPUT"
-          echo "count=$(wc -l < list.txt)"        >> "$GITHUB_OUTPUT"
-          echo "Changed paths:"
-          cat list.txt || true
-
       - name: Sync to S3
         run: |
           aws s3 sync dist/ s3://$BUCKET --delete
 
-      - name: Invalidate CloudFront (changed paths)
-        if: steps.diff.outputs.count != '0'
+      - name: Invalidate specific paths
         run: |
           aws cloudfront create-invalidation \
             --distribution-id $DIST_ID \
-            --paths ${{ steps.diff.outputs.paths }}
+            --paths "/index.html" "/css/*" "/js/*"
